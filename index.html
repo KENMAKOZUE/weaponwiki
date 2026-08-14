@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WW</title>
+    <style>
+        /* Светлая тема (По умолчанию) */
+        :root {
+            --bg-main: #e6f2ff;
+            --bg-card: #f0f7ff;
+            --bg-accent: #d0e5ff;
+            --text-main: #0d233a;
+            --border-color: #99c2ff;
+            --link-color: #0055b3;
+            --link-hover: #003366;
+        }
+
+        /* Темная тема (Черная) */
+        [data-theme="dark"] {
+            --bg-main: #121212;
+            --bg-card: #1e1e1e;
+            --bg-accent: #2c2c2c;
+            --text-main: #e0e0e0;
+            --border-color: #333333;
+            --link-color: #66b2ff;
+            --link-hover: #99ccff;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Шапка с тумблером темы */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        /* Круглая кнопка для эмодзи */
+        .theme-toggle-btn {
+            background-color: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle-btn:hover {
+            background-color: var(--bg-accent);
+            border-color: var(--link-color);
+            transform: scale(1.05);
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        aside, main {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 15px 20px;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        aside { position: sticky; top: 20px; }
+
+        a { color: var(--link-color); text-decoration: none; cursor: pointer; }
+        a:hover { background-color: var(--bg-accent); text-decoration: underline; }
+
+        /* Стили древа */
+        .home-link {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 15px;
+            padding: 5px;
+            border-bottom: 2px dashed var(--border-color);
+        }
+        details { margin-bottom: 8px; }
+        summary { cursor: pointer; font-weight: 600; padding: 4px; user-select: none; }
+        summary:hover { background-color: var(--bg-accent); }
+        aside ul { list-style: none; padding-left: 15px; margin: 5px 0; }
+        aside li { margin-bottom: 4px; }
+        aside li::before { content: "├ "; color: var(--border-color); }
+
+        /* Экраны контента */
+        .view-screen { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view-screen.active { display: block; }
+
+        article {
+            padding: 12px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Кнопка возврата */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--bg-card);
+            color: var(--link-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            font-weight: 600;
+            font-family: inherit;
+            font-size: 0.9em;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            background-color: var(--bg-accent);
+            color: var(--link-hover);
+            border-color: var(--link-hover);
+        }
+
+        /* КОНТЕЙНЕР ДЛЯ СТАТЬИ И КАРТИНКИ */
+        .article-body {
+            display: block;
+            margin-top: 20px;
+            white-space: pre-wrap; /* Сохраняет отступы (Enter) из Firebase */
+        }
+
+        .article-image {
+            display: block;
+            width: auto;
+            max-width: 350px;
+            max-height: 250px;
+            height: auto;
+            margin: 15px 0;
+            padding: 6px;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            object-fit: contain;
+        }
+
+        /* Шапка главной страницы */
+        .home-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        /* Счетчик онлайна */
+        .online-indicator {
+            display: inline-flex;
+            align-items: center;
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .green-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #28a745;
+            border-radius: 50%;
+            margin-left: 8px; 
+            box-shadow: 0 0 0 rgba(40, 167, 69, 0.7);
+            animation: pulse 2s infinite;
+        }
+
+        .tg-sidebar-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: var(--bg-accent);
+            color: var(--link-color); 
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+        }
+
+        .tg-sidebar-btn:hover {
+            background-color: var(--border-color);
+            text-decoration: none;
+            transform: translateY(-2px);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+
+        @media (max-width: 768px) {
+            .layout { grid-template-columns: 1fr; }
+            aside { position: static; }
+            .article-image { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div>
+            <h1 style="margin:0;">WEAPON WIKI</h1>
+            <p style="margin:0;">База знаний из мира Фиксов</p>
+        </div>
+        <!-- РУБИЛЬНИК ТЕМЫ -->
+        <button id="theme-toggle" class="theme-toggle-btn" title="Переключить тему">☀️</button>
+    </header>
+
+    <div class="layout">
+        
+        <!-- ДРЕВО ФАЙЛОВ -->
+        <aside>
+            <h3 style="margin-top:0;">📂 НАВИГАЦИЯ</h3>
+            <a href="#home" class="home-link">🏠 Главная (Рекомендации)</a>
+            <div id="tree-container">Загрузка категорий...</div>
+
+            <!-- Ссылка на ТГ бота -->
+            <a href="###" class="tg-sidebar-btn">
+                ✈️ Наш Telegram-бот(скоро)
+            </a>
+        </aside>
+
+        <!-- ОСНОВНОЙ КОНТЕНТ -->
+        <main>
+
+            <!-- ЭКРАН 1: ГЛАВНАЯ СТРАНИЦА (РЕКОМЕНДАЦИИ) -->
+            <div id="view-home" class="view-screen active">
+                <div class="home-header">
+                    <h2 style="margin:0;">🔥 РЕКОМЕНДАЦИИ НЕДЕЛИ</h2>
+                    <div class="online-indicator">
+                        <span id="online-count">0</span>&nbsp;онлайн
+                        <span class="green-dot"></span>
+                    </div>
+                </div>
+
+                <div id="weekly-container" style="margin-top: 20px;">Загрузка рекомендаций...</div>
+            </div>
+
+            <!-- ЭКРАН 2: ЧТЕНИЕ КОНКРЕТНОЙ СТАТЬИ -->
+            <div id="view-article" class="view-screen">
+                <button class="btn-back" onclick="window.location.hash='home'">← Назад на главную</button>
+                <div id="single-article-content"></div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- ИНТЕГРАЦИЯ FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        // Твой API ключ 
+        const firebaseConfig = {
+            apiKey: "AIzaSyDs0QheamdwoRsbOTCeMBTrm8T9FZgwI2I",
+            authDomain: "fixwiki-bad24.firebaseapp.com",
+            projectId: "fixwiki-bad24",
+            storageBucket: "fixwiki-bad24.firebasestorage.app",
+            messagingSenderId: "1049288252913",
+            appId: "1:1049288252913:web:43b84280e288ff3006b850"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let articlesDatabase = {}; 
+
+        async function loadWikiData() {
+    const treeContainer = document.getElementById('tree-container');
+    const weeklyContainer = document.getElementById('weekly-container');
+
+    try {
+        const q = query(collection(db, "articles"), limit(30));
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            treeContainer.innerHTML = "<small>База данных пуста</small>";
+            weeklyContainer.innerHTML = "<p>Статей пока нет.</p>";
+            return;
+        }
+
+        const categories = {};
+        let weeklyHtml = "";
+
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const docId = doc.id;
+            const fullTitle = data.name || "Без названия";
+            const category = data.category || "Разное";
+
+            let menuTitle = fullTitle;
+            let articleTitle = fullTitle;
+
+            if (fullTitle.includes(":")) {
+                const parts = fullTitle.split(":");
+                menuTitle = parts[0].trim();
+                articleTitle = parts.slice(1).join(":").trim();
+            }
+
+            articlesDatabase[docId] = {
+                title: articleTitle,
+                category: category,
+                content: data.content || "",
+                imageUrl: data.imageUrl || null
+            };
+
+            if (!categories[category]) {
+                categories[category] = [];
+            }
+            
+            // ДОБАВИЛИ ЧТЕНИЕ ПОЛЯ order (если его нет, ставим 99, чтобы ушло в конец)
+            const orderNum = data.order !== undefined ? data.order : 99;
+            categories[category].push({ id: docId, menuTitle: menuTitle, order: orderNum });
+
+            if (data.isWeeklyRecommendation === true) {
+                weeklyHtml += `
+                    <article>
+                        <h3><a href="#${docId}">${articleTitle}</a></h3>
+                        <p>${data.content || ''}</p>
+                    </article>
+                `;
+            }
+        });
+
+        let treeHtml = "";
+        for (const catName in categories) {
+            // СОРТИРУЕМ МАССИВ ПЕРЕД ВЫВОДОМ по нашему полю order
+            categories[catName].sort((a, b) => a.order - b.order);
+
+            treeHtml += `
+                <details open>
+                    <summary>📁 ${catName}</summary>
+                    <ul>
+            `;
+            categories[catName].forEach(item => {
+                treeHtml += `<li><a href="#${item.id}">${item.menuTitle}</a></li>`;
+            });
+            treeHtml += `
+                    </ul>
+                </details>
+            `;
+        }
+        treeContainer.innerHTML = treeHtml;
+        weeklyContainer.innerHTML = weeklyHtml || "<p>На этой неделе нет рекомендаций.</p>";
+
+        handleNavigation();
+
+    } catch (err) {
+        console.error("Ошибка загрузки:", err);
+        treeContainer.innerHTML = "Ошибка загрузки меню.";
+    }
+}
+
+        function handleNavigation() {
+            const hash = window.location.hash.replace('#', '');
+            const viewHome = document.getElementById('view-home');
+            const viewArticle = document.getElementById('view-article');
+            const articleContent = document.getElementById('single-article-content');
+
+            if (!hash || hash === 'home') {
+                viewHome.classList.add('active');
+                viewArticle.classList.remove('active');
+            } 
+            else if (articlesDatabase[hash]) {
+                const articleData = articlesDatabase[hash];
+                
+                // Автозамена картинок и обрезка лишних пробелов в начале/конце
+                let formattedContent = articleData.content
+                .replace(/\[img:\s*(https?:\/\/[^\]]+)\]/g, '<img src="$1" class="article-image">')
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/##\s+(.*)/g, '<h3 style="margin-top: 25px; margin-bottom: 15px; font-weight: 800; font-size: 1.4em; color: var(--link-color);">$1</h3>')
+                // ВЛОЖЕННЫЙ СПИСОК (Два дефиса). margin-left: 60px (отступ больше), list-style-type: circle (пустой кружок)
+                .replace(/^--\s+(.*)/gm, '<div style="display: list-item; margin-left: 60px; margin-bottom: 5px; list-style-type: circle;">$1</div>')
+                
+                // ОБЫЧНЫЙ СПИСОК (Один дефис). margin-left: 30px, list-style-type: disc (жирная точка)
+                .replace(/^-\s+(.*)/gm, '<div style="display: list-item; margin-left: 30px; margin-bottom: 10px; list-style-type: disc;">$1</div>')
+                
+                .trim();
+
+
+                let imageHtml = "";
+                if (articleData.imageUrl) {
+                    imageHtml = `<img src="${articleData.imageUrl}" alt="Иллюстрация" class="article-image">`;
+                }
+
+                // Вывод без переносов строк между тегами, чтобы избежать красной строки
+                articleContent.innerHTML = `
+                    <h2 style="margin-top:0;">${articleData.title}</h2>
+                    <p style="color: var(--link-color); font-size: 0.9em;">Категория: ${articleData.category}</p>
+                    <div class="article-body">${formattedContent}${imageHtml}</div>
+                `;
+
+                viewHome.classList.remove('active');
+                viewArticle.classList.add('active');
+            }
+        }
+
+        window.addEventListener('hashchange', handleNavigation);
+        loadWikiData();
+
+        // LOGIC: ПЕРЕКЛЮЧАТЕЛЬ ТЕМЫ (СОЛНЦЕ И ЛУНА)
+        const themeBtn = document.getElementById('theme-toggle');
+        const savedTheme = localStorage.getItem('wiki_theme');
+
+        // Проверяем сохраненную тему при загрузке
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.innerText = '🌙'; 
+        } else {
+            themeBtn.innerText = '☀️'; 
+        }
+
+        // Логика по клику
+        themeBtn.addEventListener('click', () => {
+            let currentTheme = document.documentElement.getAttribute('data-theme');
+            if (currentTheme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('wiki_theme', 'light');
+                themeBtn.innerText = '☀️';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('wiki_theme', 'dark');
+                themeBtn.innerText = '🌙';
+            }
+        });
+    </script>
+</body>
+</html>
